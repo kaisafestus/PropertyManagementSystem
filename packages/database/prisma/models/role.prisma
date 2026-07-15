@@ -1,0 +1,43 @@
+model Credential {
+
+  id              String   @id @default(cuid())
+
+  userId          String   @unique
+
+  passwordHash    String
+
+  passwordChangedAt DateTime?
+
+  failedAttempts  Int @default(0)
+
+  lockedUntil     DateTime?
+
+  lastLoginAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@map("credentials")
+}
+
+model RoleAssignment {
+
+  id String @id @default(cuid())
+
+  userId String
+
+  role UserRole
+
+  user User @relation(fields:[userId], references:[id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, role])
+
+  @@index([role])
+
+  @@map("role_assignments")
+}

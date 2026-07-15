@@ -6,3 +6,243 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+/////////////////////////////////////////////////////////
+// ENUMS
+/////////////////////////////////////////////////////////
+
+enum UserRole {
+  ADMIN
+  LANDLORD
+  APPLICANT
+  TENANT
+  VENDOR
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+/////////////////////////////////////////////////////////
+// ORGANIZATION
+/////////////////////////////////////////////////////////
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  phone       String?
+
+  status      OrganizationStatus @default(ACTIVE)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+}
+
+/////////////////////////////////////////////////////////
+// USER
+/////////////////////////////////////////////////////////
+
+model User {
+  id              String @id @default(cuid())
+
+  organizationId  String?
+
+  organization    Organization? @relation(fields:[organizationId], references:[id])
+
+  firstName       String
+  lastName        String
+
+  email           String @unique
+  phone           String?
+
+  passwordHash    String
+
+  emailVerified   Boolean @default(false)
+
+  status          UserStatus @default(PENDING)
+
+  role            UserRole
+
+  lastLogin       DateTime?
+
+  createdAt       DateTime @default(now())
+
+  updatedAt       DateTime @updatedAt
+
+  applicant       Applicant?
+
+  tenant          Tenant?
+
+  vendor          Vendor?
+
+  sessions        UserSession[]
+
+  resetTokens     PasswordResetToken[]
+
+  notifications   Notification[]
+
+  auditLogs       AuditLog[]
+}
+
+/////////////////////////////////////////////////////////
+// USER SESSION
+/////////////////////////////////////////////////////////
+
+model UserSession {
+
+  id          String @id @default(cuid())
+
+  userId      String
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  token       String @unique
+
+  ipAddress   String?
+
+  userAgent   String?
+
+  expiresAt   DateTime
+
+  createdAt   DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// PASSWORD RESET
+/////////////////////////////////////////////////////////
+
+model PasswordResetToken {
+
+  id          String @id @default(cuid())
+
+  userId      String
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  token       String @unique
+
+  expiresAt   DateTime
+
+  used        Boolean @default(false)
+
+  createdAt   DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// APPLICANT
+/////////////////////////////////////////////////////////
+
+model Applicant {
+
+  id          String @id @default(cuid())
+
+  userId      String @unique
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  createdAt   DateTime @default(now())
+
+  applications RentalApplication[]
+}
+
+/////////////////////////////////////////////////////////
+// RENTAL APPLICATION
+/////////////////////////////////////////////////////////
+
+model RentalApplication {
+
+  id          String @id @default(cuid())
+
+  applicantId String
+
+  applicant   Applicant @relation(fields:[applicantId], references:[id], onDelete:Cascade)
+
+  createdAt   DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// TENANT
+/////////////////////////////////////////////////////////
+
+model Tenant {
+
+  id          String @id @default(cuid())
+
+  userId      String @unique
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  createdAt   DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// VENDOR
+/////////////////////////////////////////////////////////
+
+model Vendor {
+
+  id          String @id @default(cuid())
+
+  userId      String @unique
+
+  companyName String
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  createdAt   DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// NOTIFICATION
+/////////////////////////////////////////////////////////
+
+model Notification {
+
+  id          String @id @default(cuid())
+
+  userId      String
+
+  title       String
+
+  message     String
+
+  isRead      Boolean @default(false)
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  createdAt   DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// AUDIT LOG
+/////////////////////////////////////////////////////////
+
+model AuditLog {
+
+  id          String @id @default(cuid())
+
+  userId      String
+
+  action      String
+
+  entity      String
+
+  entityId    String
+
+  metadata    Json?
+
+  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  createdAt   DateTime @default(now())
+}

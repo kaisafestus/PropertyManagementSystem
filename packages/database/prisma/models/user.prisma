@@ -1,0 +1,27 @@
+model User {
+  id              String      @id @default(cuid())
+
+  organizationId  String?
+
+  firstName       String
+  lastName        String
+
+  email           String      @unique
+  phone           String?
+
+  emailVerified   Boolean     @default(false)
+  active          Boolean     @default(true)
+
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+
+  credential      Credential?
+
+  roles           RoleAssignment[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+
+  @@map("users")
+}

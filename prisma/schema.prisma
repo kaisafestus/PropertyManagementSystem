@@ -168,7 +168,9 @@ model RentalApplication {
 
   applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
+  createdAt                DateTime                   @default(now())
+  ApplicationDocument      ApplicationDocument[]
+  ApplicationStatusHistory ApplicationStatusHistory[]
 }
 
 /////////////////////////////////////////////////////////
@@ -542,4 +544,43 @@ model PropertyUtility {
   utility Utility @relation(fields: [utilityId], references: [id], onDelete: Cascade)
 
   @@unique([propertyId, utilityId])
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model ApplicationDocument {
+  id String @id @default(cuid())
+
+  applicationId String
+
+  application RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  documentType String
+
+  fileName String
+
+  fileUrl String
+
+  uploadedAt DateTime @default(now())
+}
+
+model ApplicationStatusHistory {
+  id String @id @default(cuid())
+
+  applicationId String
+
+  application RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  status ApplicationStatus
+
+  remarks String?
+
+  createdAt DateTime @default(now())
 }

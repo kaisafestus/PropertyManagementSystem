@@ -36,17 +36,18 @@ enum OrganizationStatus {
 /////////////////////////////////////////////////////////
 
 model Organization {
-  id          String   @id @default(cuid())
-  name        String
-  email       String   @unique
-  phone       String?
+  id    String  @id @default(cuid())
+  name  String
+  email String  @unique
+  phone String?
 
-  status      OrganizationStatus @default(ACTIVE)
+  status OrganizationStatus @default(ACTIVE)
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  users       User[]
+  users              User[]
+  UserRoleAssignment UserRoleAssignment[]
 }
 
 /////////////////////////////////////////////////////////
@@ -54,45 +55,46 @@ model Organization {
 /////////////////////////////////////////////////////////
 
 model User {
-  id              String @id @default(cuid())
+  id String @id @default(cuid())
 
-  organizationId  String?
+  organizationId String?
 
-  organization    Organization? @relation(fields:[organizationId], references:[id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
 
-  firstName       String
-  lastName        String
+  firstName String
+  lastName  String
 
-  email           String @unique
-  phone           String?
+  email String  @unique
+  phone String?
 
-  passwordHash    String
+  passwordHash String
 
-  emailVerified   Boolean @default(false)
+  emailVerified Boolean @default(false)
 
-  status          UserStatus @default(PENDING)
+  status UserStatus @default(PENDING)
 
-  role            UserRole
+  role UserRole
 
-  lastLogin       DateTime?
+  lastLogin DateTime?
 
-  createdAt       DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  updatedAt       DateTime @updatedAt
+  updatedAt DateTime @updatedAt
 
-  applicant       Applicant?
+  applicant Applicant?
 
-  tenant          Tenant?
+  tenant Tenant?
 
-  vendor          Vendor?
+  vendor Vendor?
 
-  sessions        UserSession[]
+  sessions UserSession[]
 
-  resetTokens     PasswordResetToken[]
+  resetTokens PasswordResetToken[]
 
-  notifications   Notification[]
+  notifications Notification[]
 
-  auditLogs       AuditLog[]
+  auditLogs          AuditLog[]
+  UserRoleAssignment UserRoleAssignment[]
 }
 
 /////////////////////////////////////////////////////////
@@ -100,22 +102,21 @@ model User {
 /////////////////////////////////////////////////////////
 
 model UserSession {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
+  userId String
 
-  userId      String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  token String @unique
 
-  token       String @unique
+  ipAddress String?
 
-  ipAddress   String?
+  userAgent String?
 
-  userAgent   String?
+  expiresAt DateTime
 
-  expiresAt   DateTime
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -123,20 +124,19 @@ model UserSession {
 /////////////////////////////////////////////////////////
 
 model PasswordResetToken {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
+  userId String
 
-  userId      String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  token String @unique
 
-  token       String @unique
+  expiresAt DateTime
 
-  expiresAt   DateTime
+  used Boolean @default(false)
 
-  used        Boolean @default(false)
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -144,14 +144,13 @@ model PasswordResetToken {
 /////////////////////////////////////////////////////////
 
 model Applicant {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
+  userId String @unique
 
-  userId      String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   applications RentalApplication[]
 }
@@ -161,14 +160,13 @@ model Applicant {
 /////////////////////////////////////////////////////////
 
 model RentalApplication {
-
-  id          String @id @default(cuid())
+  id String @id @default(cuid())
 
   applicantId String
 
-  applicant   Applicant @relation(fields:[applicantId], references:[id], onDelete:Cascade)
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -176,14 +174,13 @@ model RentalApplication {
 /////////////////////////////////////////////////////////
 
 model Tenant {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
+  userId String @unique
 
-  userId      String @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -191,16 +188,15 @@ model Tenant {
 /////////////////////////////////////////////////////////
 
 model Vendor {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
-
-  userId      String @unique
+  userId String @unique
 
   companyName String
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -208,20 +204,19 @@ model Vendor {
 /////////////////////////////////////////////////////////
 
 model Notification {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
+  userId String
 
-  userId      String
+  title String
 
-  title       String
+  message String
 
-  message     String
+  isRead Boolean @default(false)
 
-  isRead      Boolean @default(false)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
-
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -229,20 +224,121 @@ model Notification {
 /////////////////////////////////////////////////////////
 
 model AuditLog {
+  id String @id @default(cuid())
 
-  id          String @id @default(cuid())
+  userId String
 
-  userId      String
+  action String
 
-  action      String
+  entity String
 
-  entity      String
+  entityId String
 
-  entityId    String
+  metadata Json?
 
-  metadata    Json?
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user        User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  createdAt DateTime @default(now())
+}
 
-  createdAt   DateTime @default(now())
+/////////////////////////////////////////////////////////
+// ROLE
+/////////////////////////////////////////////////////////
+
+model Role {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  description String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  assignments UserRoleAssignment[]
+
+  permissions RolePermission[]
+}
+
+/////////////////////////////////////////////////////////
+// USER ROLE ASSIGNMENT
+/////////////////////////////////////////////////////////
+
+model UserRoleAssignment {
+  id String @id @default(cuid())
+
+  userId String
+
+  roleId String
+
+  organizationId String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([userId, roleId])
+}
+
+/////////////////////////////////////////////////////////
+// PERMISSION
+/////////////////////////////////////////////////////////
+
+model Permission {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  resource String
+
+  action String
+
+  description String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  roles RolePermission[]
+}
+
+/////////////////////////////////////////////////////////
+// ROLE PERMISSION
+/////////////////////////////////////////////////////////
+
+model RolePermission {
+  id String @id @default(cuid())
+
+  roleId String
+
+  permissionId String
+
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now())
+
+  @@unique([roleId, permissionId])
+}
+
+/////////////////////////////////////////////////////////
+// PERMISSION GROUP
+/////////////////////////////////////////////////////////
+
+model PermissionGroup {
+  id String @id @default(cuid())
+
+  name String @unique
+
+  description String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
 }

@@ -390,6 +390,8 @@ model Property {
 
   units Unit[]
 
+  listings Listing[]
+
   amenities       PropertyAmenity[]
   PropertyUtility PropertyUtility[]
 }
@@ -485,6 +487,8 @@ model Unit {
 
   images UnitImage[]
 
+  listing Listing?
+
   @@unique([propertyId, unitNumber])
 }
 
@@ -546,6 +550,14 @@ model PropertyUtility {
   @@unique([propertyId, utilityId])
 }
 
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  PAUSED
+  RENTED
+  ARCHIVED
+}
+
 enum ApplicationStatus {
   DRAFT
   SUBMITTED
@@ -581,6 +593,57 @@ model ApplicationStatusHistory {
   status ApplicationStatus
 
   remarks String?
+
+  createdAt DateTime @default(now())
+}
+
+/////////////////////////////////////////////////////////
+// LISTING
+/////////////////////////////////////////////////////////
+
+model Listing {
+  id String @id @default(cuid())
+
+  propertyId String
+  unitId     String @unique
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit     Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  title       String
+  description String?
+
+  monthlyRent     Decimal @db.Decimal(12, 2)
+  securityDeposit Decimal @db.Decimal(12, 2)
+
+  availableFrom DateTime
+
+  status ListingStatus @default(DRAFT)
+
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images ListingImage[]
+}
+
+/////////////////////////////////////////////////////////
+// LISTING IMAGE
+/////////////////////////////////////////////////////////
+
+model ListingImage {
+  id String @id @default(cuid())
+
+  listingId String
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  url String
+
+  caption String?
+
+  displayOrder Int @default(0)
 
   createdAt DateTime @default(now())
 }

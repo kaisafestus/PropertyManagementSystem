@@ -9,9 +9,13 @@ export const envSchema = z.object({
 
   DATABASE_URL: z.string().min(1),
 
-  JWT_SECRET: z.string().min(32),
+  JWT_ACCESS_SECRET: z.string().min(32),
 
-  JWT_EXPIRES_IN: z.string().default('1d'),
+  JWT_REFRESH_SECRET: z.string().min(32),
+
+  JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
+
+  JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 });
 
 export type Env = z.infer<typeof envSchema>;

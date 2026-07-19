@@ -1,0 +1,90 @@
+enum UserRole {
+  ADMIN
+  LANDLORD
+  APPLICANT
+  TENANT
+  VENDOR
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum PropertyType {
+  APARTMENT
+  STANDALONE
+  BEDSITTER
+  STUDIO
+  COMMERCIAL
+  OFFICE
+  WAREHOUSE
+}
+
+enum UnitStatus {
+  AVAILABLE
+  UNDER_APPLICATION
+  RESERVED
+  OCCUPIED
+  NOTICE
+  MAINTENANCE
+}
+
+enum ListingStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+  CLOSED
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  PRE_QUALIFIED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+enum LeaseStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  PARTIAL
+  FAILED
+  REFUNDED
+  OVERDUE
+}
+
+enum MaintenancePriority {
+  LOW
+  MEDIUM
+  HIGH
+  EMERGENCY
+}
+
+enum MaintenanceStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum NotificationType {
+  SYSTEM
+  APPLICATION
+  PAYMENT
+  MAINTENANCE
+  MESSAGE
+  REMINDER
+}

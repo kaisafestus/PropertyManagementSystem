@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PropertiesRepository } from '../repositories/properties.repository';
@@ -11,12 +16,6 @@ export class PropertiesService {
   constructor(private readonly propertiesRepository: PropertiesRepository) {}
 
   async create(organizationId: string, createPropertyDto: CreatePropertyDto) {
-    console.log('=== SERVICE CREATE CALLED ===');
-    console.log('organizationId (string):', organizationId);
-    console.log('DTO:', JSON.stringify(createPropertyDto));
-
-    this.logger.log(`Creating property for organization: ${organizationId}`);
-
     try {
       const data: Prisma.PropertyCreateInput = {
         organization: {
@@ -33,19 +32,8 @@ export class PropertiesService {
         active: createPropertyDto.active ?? true,
       };
 
-      console.log('Prisma data:', JSON.stringify(data));
-
-      const result = await this.propertiesRepository.create(data);
-      console.log('Result:', JSON.stringify(result));
-      return result;
+      return await this.propertiesRepository.create(data);
     } catch (error: unknown) {
-      const err = error as Error;
-      console.error('=== ERROR IN SERVICE ===');
-      console.error('Message:', err.message);
-      console.error('Stack:', err.stack);
-      this.logger.error(`Error creating property: ${err.message}`);
-      this.logger.error(err.stack);
-
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new BadRequestException(
@@ -64,7 +52,11 @@ export class PropertiesService {
     return this.propertiesRepository.findAll();
   }
 
-  findById(id: string) {
-    return this.propertiesRepository.findById(id);
+  async findById(id: string) {
+    const property = await this.propertiesRepository.findById(id);
+    if (!property) {
+      throw new NotFoundException(`Property with ID ${id} not found`);
+    }
+    return property;
   }
 }

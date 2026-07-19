@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Param,
   UseGuards,
   HttpStatus,
 } from '@nestjs/common';
@@ -55,9 +56,6 @@ export class PropertiesController {
     @CurrentUser('organizationId') organizationId: string,
     @Body() createPropertyDto: CreatePropertyDto,
   ) {
-    console.log('=== CONTROLLER REACHED ===');
-    console.log('organizationId:', organizationId);
-    console.log('DTO:', createPropertyDto);
     return this.propertiesService.create(organizationId, createPropertyDto);
   }
 
@@ -73,5 +71,23 @@ export class PropertiesController {
   })
   findAll() {
     return this.propertiesService.findAll();
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get property by ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Property found',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Property not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  findOne(@Param('id') id: string) {
+    return this.propertiesService.findById(id);
   }
 }

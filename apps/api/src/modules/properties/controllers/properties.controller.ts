@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Param,
   UseGuards,
   HttpStatus,
@@ -22,6 +24,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 import { PropertiesService } from '../services/properties.service';
 import { CreatePropertyDto } from '../dto/create-property.dto';
+import { UpdatePropertyDto } from '../dto/update-property.dto';
 
 @ApiTags('Properties')
 @ApiBearerAuth()
@@ -44,10 +47,7 @@ export class PropertiesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input or duplicate property code',
   })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden - requires ADMIN role',
@@ -61,33 +61,68 @@ export class PropertiesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all properties' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'List of all properties',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'List of all properties' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findAll() {
     return this.propertiesService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get property by ID' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Property found' })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Property not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  findOne(@Param('id') id: string) {
+    return this.propertiesService.findById(id);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update a property' })
   @ApiResponse({
     status: HttpStatus.OK,
-    description: 'Property found',
+    description: 'Property updated successfully',
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Property not found',
   })
   @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid input or duplicate property code',
   })
-  findOne(@Param('id') id: string) {
-    return this.propertiesService.findById(id);
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - requires ADMIN role',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updatePropertyDto: UpdatePropertyDto,
+  ) {
+    return this.propertiesService.update(id, updatePropertyDto);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Delete a property' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Property deleted successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Property not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - requires ADMIN role',
+  })
+  remove(@Param('id') id: string) {
+    return this.propertiesService.remove(id);
   }
 }

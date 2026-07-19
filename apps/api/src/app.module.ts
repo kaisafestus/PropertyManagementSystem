@@ -6,6 +6,7 @@ import { PrismaModule } from './database/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PropertiesModule } from './modules/properties/properties.module';
 import { UnitsModule } from './modules/units/units.module';
+import { TenantsModule } from './modules/tenants/tenants.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { HealthModule } from './modules/health/health.module';
     AuthModule,
     PropertiesModule,
     UnitsModule,
+    TenantsModule,
     HealthModule,
   ],
 })

@@ -97,6 +97,7 @@ model User {
 
   auditLogs          AuditLog[]
   UserRoleAssignment UserRoleAssignment[]
+  Document           Document[]
 }
 
 /////////////////////////////////////////////////////////
@@ -821,4 +822,76 @@ model Expense {
   @@index([propertyId])
   @@index([vendorId])
   @@index([category])
+}
+
+/////////////////////////////////////////////////////////
+// DOCUMENTS
+/////////////////////////////////////////////////////////
+
+enum DocumentCategory {
+  PROPERTY
+  TENANT
+  LEASE
+  VENDOR
+  INVOICE
+  RECEIPT
+  MAINTENANCE
+  INSURANCE
+  OTHER
+}
+
+model Document {
+  id          String           @id @default(cuid())
+  name        String
+  url         String
+  category    DocumentCategory
+  fileType    String
+  size        Int
+  description String?
+  entityId    String
+  entityType  String
+  uploadedBy  String
+  uploader    User             @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([entityId])
+  @@index([category])
+  @@index([uploadedBy])
+}
+
+/////////////////////////////////////////////////////////
+// DOCUMENTS
+/////////////////////////////////////////////////////////
+
+enum DocumentCategory {
+  PROPERTY
+  TENANT
+  LEASE
+  VENDOR
+  INVOICE
+  RECEIPT
+  MAINTENANCE
+  INSURANCE
+  OTHER
+}
+
+model Document {
+  id         String             @id @default(cuid())
+  name       String
+  url        String
+  category   DocumentCategory
+  fileType   String
+  size       Int
+  description String?
+  entityId   String             // ID of the related entity (property, tenant, etc.)
+  entityType String             // e.g., 'Property', 'Tenant', 'Lease'
+  uploadedBy String
+  uploader   User               @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([entityId])
+  @@index([category])
+  @@index([uploadedBy])
 }

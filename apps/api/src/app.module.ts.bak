@@ -1,31 +1,34 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
+import { validate } from './config/env/env.configuration';
 import { PrismaModule } from './database/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
-import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { PropertiesModule } from './modules/properties/properties.module';
 import { UnitsModule } from './modules/units/units.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { VendorsModule } from './modules/vendors/vendors.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { FinancialModule } from './modules/financial/financial.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { DocumentsModule } from './modules/documents/documents.module';
-import { ReportsModule } from './modules/reports/reports.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
+      validate,
     }),
     PrismaModule,
     AuthModule,
-    UsersModule,
-    OrganizationsModule,
     PropertiesModule,
     UnitsModule,
     TenantsModule,
@@ -36,6 +39,11 @@ import { AdminModule } from './modules/admin/admin.module';
     DocumentsModule,
     ReportsModule,
     AdminModule,
+    NotificationsModule,
+    DocumentsModule,
+    ReportsModule,
+    AdminModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

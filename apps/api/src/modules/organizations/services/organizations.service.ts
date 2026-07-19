@@ -12,4 +12,12 @@ export class OrganizationsService {
   create(data: Prisma.OrganizationCreateInput, tx?: Prisma.TransactionClient) {
     return this.organizationsRepository.create(data, tx);
   }
+
+  findFirst() {
+    return this.organizationsRepository.findFirst();
+  }
+
+  findAll() {
+    return this.organizationsRepository.findAll();
+  }
 }

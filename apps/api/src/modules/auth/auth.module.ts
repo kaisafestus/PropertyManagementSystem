@@ -8,7 +8,6 @@ import { OrganizationsModule } from '../organizations/organizations.module';
 import { UsersModule } from '../users/users.module';
 
 import { AuthController } from './controllers/auth.controller';
-import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { AuthService } from './services/auth.service';
 import { PasswordService } from './services/password.service';
@@ -38,10 +37,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     PasswordService,
     JwtStrategy,
     Reflector,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
     {
       provide: APP_GUARD,
       useClass: PermissionsGuard,

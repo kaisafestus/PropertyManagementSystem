@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 
 import { PropertiesRepository } from '../repositories/properties.repository';
 import { CreatePropertyDto } from '../dto/create-property.dto';
+import { UpdatePropertyDto } from '../dto/update-property.dto';
 
 @Injectable()
 export class PropertiesService {
@@ -58,5 +59,34 @@ export class PropertiesService {
       throw new NotFoundException(`Property with ID ${id} not found`);
     }
     return property;
+  }
+
+  async update(id: string, updatePropertyDto: UpdatePropertyDto) {
+    await this.findById(id);
+
+    try {
+      const data: Prisma.PropertyUpdateInput = {
+        name: updatePropertyDto.name,
+        code: updatePropertyDto.code,
+        description: updatePropertyDto.description,
+        addressLine1: updatePropertyDto.addressLine1,
+        addressLine2: updatePropertyDto.addressLine2,
+        city: updatePropertyDto.city,
+        county: updatePropertyDto.county,
+        postalCode: updatePropertyDto.postalCode,
+        active: updatePropertyDto.active,
+      };
+
+      return await this.propertiesRepository.update(id, data);
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException(
+            'Property with this code already exists',
+          );
+        }
+      }
+      throw error;
+    }
   }
 }

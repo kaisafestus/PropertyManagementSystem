@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Param,
   UseGuards,
   HttpStatus,
@@ -22,6 +23,7 @@ import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 
 import { PropertiesService } from '../services/properties.service';
 import { CreatePropertyDto } from '../dto/create-property.dto';
+import { UpdatePropertyDto } from '../dto/update-property.dto';
 
 @ApiTags('Properties')
 @ApiBearerAuth()
@@ -89,5 +91,35 @@ export class PropertiesController {
   })
   findOne(@Param('id') id: string) {
     return this.propertiesService.findById(id);
+  }
+
+  @Patch(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Update a property' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Property updated successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Property not found',
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid input or duplicate property code',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - requires ADMIN role',
+  })
+  update(
+    @Param('id') id: string,
+    @Body() updatePropertyDto: UpdatePropertyDto,
+  ) {
+    return this.propertiesService.update(id, updatePropertyDto);
   }
 }

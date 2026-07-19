@@ -36,4 +36,11 @@ export class PropertiesRepository {
       },
     });
   }
+
+  update(id: string, data: Prisma.PropertyUpdateInput): Promise<Property> {
+    return this.prisma.property.update({
+      where: { id },
+      data,
+    });
+  }
 }

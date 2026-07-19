@@ -8,39 +8,28 @@ export class PropertiesRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   create(data: Prisma.PropertyCreateInput): Promise<Property> {
-    return this.prisma.property.create({
-      data,
-    });
+    return this.prisma.property.create({ data });
   }
 
   findAll() {
     return this.prisma.property.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      include: {
-        organization: true,
-        images: true,
-        units: true,
-      },
+      orderBy: { createdAt: 'desc' },
+      include: { organization: true, images: true, units: true },
     });
   }
 
   findById(id: string) {
     return this.prisma.property.findUnique({
       where: { id },
-      include: {
-        organization: true,
-        images: true,
-        units: true,
-      },
+      include: { organization: true, images: true, units: true },
     });
   }
 
   update(id: string, data: Prisma.PropertyUpdateInput): Promise<Property> {
-    return this.prisma.property.update({
-      where: { id },
-      data,
-    });
+    return this.prisma.property.update({ where: { id }, data });
+  }
+
+  remove(id: string): Promise<Property> {
+    return this.prisma.property.delete({ where: { id } });
   }
 }

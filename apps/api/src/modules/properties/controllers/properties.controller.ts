@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Patch,
+  Delete,
   Param,
   UseGuards,
   HttpStatus,
@@ -46,10 +47,7 @@ export class PropertiesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input or duplicate property code',
   })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden - requires ADMIN role',
@@ -63,32 +61,20 @@ export class PropertiesController {
 
   @Get()
   @ApiOperation({ summary: 'Get all properties' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'List of all properties',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'List of all properties' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findAll() {
     return this.propertiesService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get property by ID' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Property found',
-  })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Property found' })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Property not found',
   })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   findOne(@Param('id') id: string) {
     return this.propertiesService.findById(id);
   }
@@ -108,10 +94,7 @@ export class PropertiesController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid input or duplicate property code',
   })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized',
-  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden - requires ADMIN role',
@@ -121,5 +104,25 @@ export class PropertiesController {
     @Body() updatePropertyDto: UpdatePropertyDto,
   ) {
     return this.propertiesService.update(id, updatePropertyDto);
+  }
+
+  @Delete(':id')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Delete a property' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Property deleted successfully',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Property not found',
+  })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Forbidden - requires ADMIN role',
+  })
+  remove(@Param('id') id: string) {
+    return this.propertiesService.remove(id);
   }
 }

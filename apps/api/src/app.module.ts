@@ -8,6 +8,7 @@ import { PropertiesModule } from './modules/properties/properties.module';
 import { UnitsModule } from './modules/units/units.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { VendorsModule } from './modules/vendors/vendors.module';
+import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { HealthModule } from './modules/health/health.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { HealthModule } from './modules/health/health.module';
     UnitsModule,
     TenantsModule,
     VendorsModule,
+    MaintenanceModule,
     HealthModule,
   ],
 })

@@ -37,8 +37,8 @@ export class TenantsService {
     }
   }
 
-  findAll() {
-    return this.tenantsRepository.findAll();
+  findAll(organizationId: string) {
+    return this.tenantsRepository.findAll(organizationId);
   }
 
   async findById(id: string) {

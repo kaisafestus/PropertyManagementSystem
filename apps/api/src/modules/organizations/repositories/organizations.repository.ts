@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Organization, Prisma, PrismaClient } from '@prisma/client';
+import { Prisma, Organization } from '@prisma/client';
 
 import { PrismaService } from '../../../database/prisma/prisma.service';
 
@@ -11,9 +11,32 @@ export class OrganizationsRepository {
     data: Prisma.OrganizationCreateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Organization> {
-    const client: PrismaClient | Prisma.TransactionClient = tx ?? this.prisma;
+    const client = tx || this.prisma;
+    return client.organization.create({ data });
+  }
 
-    return client.organization.create({
+  findFirst(): Promise<Organization | null> {
+    return this.prisma.organization.findFirst();
+  }
+
+  findAll(): Promise<Organization[]> {
+    return this.prisma.organization.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findById(id: string): Promise<Organization | null> {
+    return this.prisma.organization.findUnique({
+      where: { id },
+    });
+  }
+
+  update(
+    id: string,
+    data: Prisma.OrganizationUpdateInput,
+  ): Promise<Organization> {
+    return this.prisma.organization.update({
+      where: { id },
       data,
     });
   }

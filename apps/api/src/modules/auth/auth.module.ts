@@ -4,13 +4,11 @@ import { APP_GUARD, Reflector } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
-import { OrganizationsModule } from '../organizations/organizations.module';
 import { UsersModule } from '../users/users.module';
 
 import { AuthController } from './controllers/auth.controller';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { AuthService } from './services/auth.service';
-import { PasswordService } from './services/password.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
@@ -29,12 +27,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
     }),
     UsersModule,
-    OrganizationsModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    PasswordService,
     JwtStrategy,
     Reflector,
     {

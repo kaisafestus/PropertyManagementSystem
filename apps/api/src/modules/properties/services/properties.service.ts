@@ -44,8 +44,8 @@ export class PropertiesService {
     }
   }
 
-  findAll() {
-    return this.propertiesRepository.findAll();
+  findAll(organizationId: string) {
+    return this.propertiesRepository.findAll(organizationId);
   }
 
   async findById(id: string) {

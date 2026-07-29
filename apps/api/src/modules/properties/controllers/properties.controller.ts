@@ -37,7 +37,7 @@ export class PropertiesController {
   constructor(private readonly propertiesService: PropertiesService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create a new property' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -63,8 +63,8 @@ export class PropertiesController {
   @ApiOperation({ summary: 'Get all properties' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all properties' })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  findAll() {
-    return this.propertiesService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.propertiesService.findAll(organizationId);
   }
 
   @Get(':id')
@@ -80,7 +80,7 @@ export class PropertiesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a property' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -107,7 +107,7 @@ export class PropertiesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a property' })
   @ApiResponse({
     status: HttpStatus.OK,

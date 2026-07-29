@@ -8,7 +8,8 @@
     "check-types": "turbo run check-types",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "start": "pnpm --filter api start:prod"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",

@@ -43,8 +43,8 @@ export class FinancialService {
     }
   }
 
-  findAllInvoices() {
-    return this.financialRepository.findAllInvoices();
+  findAllInvoices(organizationId: string) {
+    return this.financialRepository.findAllInvoices(organizationId);
   }
 
   async findInvoiceById(id: string) {
@@ -157,8 +157,8 @@ export class FinancialService {
     await this.financialRepository.updateInvoice(invoiceId, { status });
   }
 
-  findAllPayments() {
-    return this.financialRepository.findAllPayments();
+  findAllPayments(organizationId: string) {
+    return this.financialRepository.findAllPayments(organizationId);
   }
 
   async findPaymentById(id: string) {

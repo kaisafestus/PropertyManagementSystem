@@ -15,8 +15,9 @@ export class MaintenanceRepository {
     });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.maintenanceRequest.findMany({
+      where: { property: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { property: true, unit: true, tenant: true, vendor: true },
     });

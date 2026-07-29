@@ -36,8 +36,8 @@ export class VendorsService {
     }
   }
 
-  findAll() {
-    return this.vendorsRepository.findAll();
+  findAll(organizationId: string) {
+    return this.vendorsRepository.findAll(organizationId);
   }
 
   async findById(id: string) {

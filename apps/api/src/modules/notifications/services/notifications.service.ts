@@ -18,8 +18,8 @@ export class NotificationsService {
     });
   }
 
-  findAll() {
-    return this.notificationsRepository.findAll();
+  findAll(organizationId: string) {
+    return this.notificationsRepository.findAll(organizationId);
   }
 
   findByUser(userId: string) {

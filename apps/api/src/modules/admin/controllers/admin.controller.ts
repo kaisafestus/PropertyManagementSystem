@@ -19,7 +19,7 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('stats')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Get system statistics' })
   @ApiResponse({ status: HttpStatus.OK, description: 'System stats retrieved' })
   getSystemStats() {
@@ -27,7 +27,7 @@ export class AdminController {
   }
 
   @Get('growth')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Get user growth data' })
   @ApiResponse({
     status: HttpStatus.OK,

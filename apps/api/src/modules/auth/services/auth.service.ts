@@ -1,65 +1,29 @@
 import {
   BadRequestException,
-  ConflictException,
   Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User, UserRole } from '@prisma/client';
+import { User } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 import { UsersService } from '../../users/services/users.service';
-import { OrganizationsService } from '../../organizations/services/organizations.service';
-import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
-import { PasswordService } from './password.service';
+import { PasswordService } from '../../../common/services/password.service';
+import { PrismaService } from '../../../database/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
-    private readonly organizationsService: OrganizationsService,
     private readonly jwtService: JwtService,
     private readonly passwordService: PasswordService,
+    private readonly prisma: PrismaService,
   ) {}
-
-  async register(
-    registerDto: RegisterDto,
-  ): Promise<{ user: User; accessToken: string }> {
-    const { email, password, firstName, lastName } = registerDto;
-
-    const existingUser = await this.usersService.findByEmail(email);
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
-    }
-
-    const hashedPassword = await this.passwordService.hash(password);
-
-    let organization = await this.organizationsService.findFirst();
-    if (!organization) {
-      organization = await this.organizationsService.create({
-        name: `${firstName}'s Organization`,
-        email: email,
-      });
-    }
-
-    const user = await this.usersService.create({
-      email,
-      passwordHash: hashedPassword,
-      firstName,
-      lastName,
-      organization: {
-        connect: { id: organization.id },
-      },
-      role: UserRole.ADMIN,
-    });
-
-    const accessToken = this.generateToken(user);
-
-    return { user, accessToken };
-  }
 
   async login(
     loginDto: LoginDto,
-  ): Promise<{ user: User; accessToken: string }> {
+  ): Promise<{ user: User; accessToken: string; refreshToken: string }> {
     const { email, password } = loginDto;
 
     const user = await this.usersService.findByEmail(email);
@@ -67,20 +31,93 @@ export class AuthService {
       throw new BadRequestException('Invalid credentials');
     }
 
+    if (user.status === 'SUSPENDED' || user.status === 'INACTIVE') {
+      throw new UnauthorizedException('Account is suspended or inactive');
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const minutesLeft = Math.ceil(
+        (user.lockedUntil.getTime() - Date.now()) / 60000,
+      );
+      throw new UnauthorizedException(
+        `Account is locked. Try again in ${minutesLeft} minute(s)`,
+      );
+    }
+
     const isPasswordValid = await this.passwordService.compare(
       password,
       user.passwordHash,
     );
+
     if (!isPasswordValid) {
+      const newAttempts = user.failedLoginAttempts + 1;
+      const lockAfter = 5;
+
+      if (newAttempts >= lockAfter) {
+        const lockUntil = new Date();
+        lockUntil.setMinutes(lockUntil.getMinutes() + 15);
+        await this.usersService.updateLockout(user.id, newAttempts, lockUntil);
+      } else {
+        await this.usersService.updateFailedAttempts(user.id, newAttempts);
+      }
+
       throw new BadRequestException('Invalid credentials');
     }
 
-    const accessToken = this.generateToken(user);
+    await this.usersService.updateLastLogin(user.id);
+    await this.usersService.updateFailedAttempts(user.id, 0);
 
-    return { user, accessToken };
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = await this.generateRefreshToken(user.id);
+
+    return { user, accessToken, refreshToken };
   }
 
-  private generateToken(user: User): string {
+  async refresh(refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required');
+    }
+
+    const session = await this.prisma.userSession.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!session) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (session.expiresAt < new Date()) {
+      await this.prisma.userSession.delete({ where: { id: session.id } });
+      throw new UnauthorizedException('Refresh token has expired');
+    }
+
+    const user = session.user;
+
+    if (user.status === 'SUSPENDED' || user.status === 'INACTIVE') {
+      throw new UnauthorizedException('Account is suspended or inactive');
+    }
+
+    await this.prisma.userSession.delete({ where: { id: session.id } });
+
+    const newAccessToken = this.generateAccessToken(user);
+    const newRefreshToken = await this.generateRefreshToken(user.id);
+
+    return {
+      user,
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  async logout(userId: string) {
+    await this.prisma.userSession.deleteMany({
+      where: { userId },
+    });
+    return { message: 'Logged out successfully' };
+  }
+
+  private generateAccessToken(user: User): string {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -88,5 +125,22 @@ export class AuthService {
       role: user.role,
     };
     return this.jwtService.sign(payload);
+  }
+
+  private async generateRefreshToken(userId: string): Promise<string> {
+    const token = randomBytes(40).toString('hex');
+    const expiresInDays = 7;
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+
+    await this.prisma.userSession.create({
+      data: {
+        userId,
+        token,
+        expiresAt,
+      },
+    });
+
+    return token;
   }
 }

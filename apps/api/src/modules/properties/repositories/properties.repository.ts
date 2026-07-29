@@ -11,8 +11,9 @@ export class PropertiesRepository {
     return this.prisma.property.create({ data });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.property.findMany({
+      where: { organizationId },
       orderBy: { createdAt: 'desc' },
       include: { organization: true, images: true, units: true },
     });

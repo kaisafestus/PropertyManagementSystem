@@ -49,8 +49,8 @@ export class MaintenanceService {
     }
   }
 
-  findAll() {
-    return this.maintenanceRepository.findAll();
+  findAll(organizationId: string) {
+    return this.maintenanceRepository.findAll(organizationId);
   }
 
   findByProperty(propertyId: string) {

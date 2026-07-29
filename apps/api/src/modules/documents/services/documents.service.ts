@@ -21,8 +21,8 @@ export class DocumentsService {
     });
   }
 
-  findAll() {
-    return this.documentsRepository.findAll();
+  findAll(organizationId: string) {
+    return this.documentsRepository.findAll(organizationId);
   }
 
   findByEntity(entityId: string, entityType: string) {

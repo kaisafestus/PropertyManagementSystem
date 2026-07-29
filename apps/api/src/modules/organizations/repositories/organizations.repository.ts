@@ -30,4 +30,14 @@ export class OrganizationsRepository {
       where: { id },
     });
   }
+
+  update(
+    id: string,
+    data: Prisma.OrganizationUpdateInput,
+  ): Promise<Organization> {
+    return this.prisma.organization.update({
+      where: { id },
+      data,
+    });
+  }
 }

@@ -10,8 +10,9 @@ export class TenantsRepository {
     return this.prisma.tenant.create({ data });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.tenant.findMany({
+      where: { user: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { user: true },
     });

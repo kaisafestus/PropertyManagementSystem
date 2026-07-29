@@ -21,6 +21,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
@@ -33,7 +34,7 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Upload a document' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -46,8 +47,8 @@ export class DocumentsController {
   @Get()
   @ApiOperation({ summary: 'Get all documents' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all documents' })
-  findAll() {
-    return this.documentsService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.documentsService.findAll(organizationId);
   }
 
   @Get('entity')
@@ -81,7 +82,7 @@ export class DocumentsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a document' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -95,7 +96,7 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a document' })
   @ApiResponse({
     status: HttpStatus.OK,

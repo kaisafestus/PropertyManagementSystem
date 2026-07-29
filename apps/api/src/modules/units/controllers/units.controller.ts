@@ -19,6 +19,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { UnitsService } from '../services/units.service';
 import { CreateUnitDto } from '../dto/create-unit.dto';
 import { UpdateUnitDto } from '../dto/update-unit.dto';
@@ -31,7 +32,7 @@ export class UnitsController {
   constructor(private readonly unitsService: UnitsService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create a new unit' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -54,8 +55,8 @@ export class UnitsController {
   @ApiOperation({ summary: 'Get all units' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all units' })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  findAll() {
-    return this.unitsService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.unitsService.findAll(organizationId);
   }
 
   @Get('property/:propertyId')
@@ -76,7 +77,7 @@ export class UnitsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a unit' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -97,7 +98,7 @@ export class UnitsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a unit' })
   @ApiResponse({
     status: HttpStatus.OK,

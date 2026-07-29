@@ -19,6 +19,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { VendorsService } from '../services/vendors.service';
 import { CreateVendorDto } from '../dto/create-vendor.dto';
 import { UpdateVendorDto } from '../dto/update-vendor.dto';
@@ -31,7 +32,7 @@ export class VendorsController {
   constructor(private readonly vendorsService: VendorsService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create a new vendor' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -54,8 +55,8 @@ export class VendorsController {
   @ApiOperation({ summary: 'Get all vendors' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all vendors' })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  findAll() {
-    return this.vendorsService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.vendorsService.findAll(organizationId);
   }
 
   @Get('user/:userId')
@@ -83,7 +84,7 @@ export class VendorsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a vendor' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -104,7 +105,7 @@ export class VendorsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a vendor' })
   @ApiResponse({
     status: HttpStatus.OK,

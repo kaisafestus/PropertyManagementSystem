@@ -13,6 +13,7 @@
   "devDependencies": {
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
+    "@nestjs/cli": "^11.0.24",
     "@prisma/client": "6.16.2",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9.39.1",

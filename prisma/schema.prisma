@@ -12,9 +12,7 @@ datasource db {
 /////////////////////////////////////////////////////////
 
 enum UserRole {
-  ADMIN
   LANDLORD
-  APPLICANT
   TENANT
   VENDOR
 }
@@ -24,6 +22,7 @@ enum UserStatus {
   ACTIVE
   INACTIVE
   SUSPENDED
+  INVITED
 }
 
 enum OrganizationStatus {
@@ -50,6 +49,8 @@ model Organization {
 
   properties         Property[]
   UserRoleAssignment UserRoleAssignment[]
+
+  invitations Invitation[]
 }
 
 /////////////////////////////////////////////////////////
@@ -79,11 +80,13 @@ model User {
 
   lastLogin DateTime?
 
+  failedLoginAttempts Int @default(0)
+
+  lockedUntil DateTime?
+
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
-
-  applicant Applicant?
 
   tenant Tenant?
 
@@ -98,6 +101,52 @@ model User {
   auditLogs          AuditLog[]
   UserRoleAssignment UserRoleAssignment[]
   Document           Document[]
+
+  invitationsSent Invitation[] @relation("InvitedBy")
+
+  deletedAt DateTime?
+}
+
+/////////////////////////////////////////////////////////
+// INVITATION
+/////////////////////////////////////////////////////////
+
+model Invitation {
+  id String @id @default(cuid())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  email String
+
+  role UserRole
+
+  token String @unique
+
+  status InvitationStatus @default(PENDING)
+
+  invitedById String
+  invitedBy   User   @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  firstName String?
+  lastName  String?
+  phone     String?
+
+  expiresAt DateTime
+
+  acceptedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, organizationId])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
 }
 
 /////////////////////////////////////////////////////////
@@ -140,38 +189,6 @@ model PasswordResetToken {
   used Boolean @default(false)
 
   createdAt DateTime @default(now())
-}
-
-/////////////////////////////////////////////////////////
-// APPLICANT
-/////////////////////////////////////////////////////////
-
-model Applicant {
-  id String @id @default(cuid())
-
-  userId String @unique
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  applications RentalApplication[]
-}
-
-/////////////////////////////////////////////////////////
-// RENTAL APPLICATION
-/////////////////////////////////////////////////////////
-
-model RentalApplication {
-  id String @id @default(cuid())
-
-  applicantId String
-
-  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-
-  createdAt                DateTime                   @default(now())
-  ApplicationDocument      ApplicationDocument[]
-  ApplicationStatusHistory ApplicationStatusHistory[]
 }
 
 /////////////////////////////////////////////////////////
@@ -335,22 +352,6 @@ model RolePermission {
   assignedAt DateTime @default(now())
 
   @@unique([roleId, permissionId])
-}
-
-/////////////////////////////////////////////////////////
-// PERMISSION GROUP
-/////////////////////////////////////////////////////////
-
-model PermissionGroup {
-  id String @id @default(cuid())
-
-  name String @unique
-
-  description String?
-
-  createdAt DateTime @default(now())
-
-  updatedAt DateTime @updatedAt
 }
 
 /////////////////////////////////////////////////////////
@@ -569,45 +570,6 @@ enum ListingStatus {
   PAUSED
   RENTED
   ARCHIVED
-}
-
-enum ApplicationStatus {
-  DRAFT
-  SUBMITTED
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
-  WITHDRAWN
-}
-
-model ApplicationDocument {
-  id String @id @default(cuid())
-
-  applicationId String
-
-  application RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-  documentType String
-
-  fileName String
-
-  fileUrl String
-
-  uploadedAt DateTime @default(now())
-}
-
-model ApplicationStatusHistory {
-  id String @id @default(cuid())
-
-  applicationId String
-
-  application RentalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
-
-  status ApplicationStatus
-
-  remarks String?
-
-  createdAt DateTime @default(now())
 }
 
 /////////////////////////////////////////////////////////
@@ -854,42 +816,6 @@ model Document {
   uploader    User             @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
-
-  @@index([entityId])
-  @@index([category])
-  @@index([uploadedBy])
-}
-
-/////////////////////////////////////////////////////////
-// DOCUMENTS
-/////////////////////////////////////////////////////////
-
-enum DocumentCategory {
-  PROPERTY
-  TENANT
-  LEASE
-  VENDOR
-  INVOICE
-  RECEIPT
-  MAINTENANCE
-  INSURANCE
-  OTHER
-}
-
-model Document {
-  id         String             @id @default(cuid())
-  name       String
-  url        String
-  category   DocumentCategory
-  fileType   String
-  size       Int
-  description String?
-  entityId   String             // ID of the related entity (property, tenant, etc.)
-  entityType String             // e.g., 'Property', 'Tenant', 'Lease'
-  uploadedBy String
-  uploader   User               @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
-  createdAt  DateTime           @default(now())
-  updatedAt  DateTime           @updatedAt
 
   @@index([entityId])
   @@index([category])

@@ -10,8 +10,9 @@ export class VendorsRepository {
     return this.prisma.vendor.create({ data });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.vendor.findMany({
+      where: { user: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { user: true },
     });

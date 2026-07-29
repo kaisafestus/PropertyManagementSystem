@@ -21,6 +21,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { MaintenanceService } from '../services/maintenance.service';
 import { CreateMaintenanceDto } from '../dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from '../dto/update-maintenance.dto';
@@ -33,7 +34,7 @@ export class MaintenanceController {
   constructor(private readonly maintenanceService: MaintenanceService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create a maintenance request' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -59,8 +60,8 @@ export class MaintenanceController {
     description: 'List of all maintenance requests',
   })
   @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized' })
-  findAll() {
-    return this.maintenanceService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.maintenanceService.findAll(organizationId);
   }
 
   @Get('property/:propertyId')
@@ -112,7 +113,7 @@ export class MaintenanceController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a maintenance request' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -136,7 +137,7 @@ export class MaintenanceController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a maintenance request' })
   @ApiResponse({
     status: HttpStatus.OK,

@@ -14,8 +14,9 @@ export class FinancialRepository {
     });
   }
 
-  findAllInvoices() {
+  findAllInvoices(organizationId: string) {
     return this.prisma.invoice.findMany({
+      where: { property: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { tenant: true, property: true, unit: true, payments: true },
     });
@@ -56,8 +57,9 @@ export class FinancialRepository {
     });
   }
 
-  findAllPayments() {
+  findAllPayments(organizationId: string) {
     return this.prisma.payment.findMany({
+      where: { property: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { invoice: true, tenant: true, property: true, unit: true },
     });

@@ -19,6 +19,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { FinancialService } from '../services/financial.service';
 import { CreateInvoiceDto } from '../dto/create-invoice.dto';
 import { CreatePaymentDto } from '../dto/create-payment.dto';
@@ -34,7 +35,7 @@ export class FinancialController {
 
   // Invoice endpoints
   @Post('invoices')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create an invoice' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -47,8 +48,8 @@ export class FinancialController {
   @Get('invoices')
   @ApiOperation({ summary: 'Get all invoices' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all invoices' })
-  findAllInvoices() {
-    return this.financialService.findAllInvoices();
+  findAllInvoices(@CurrentUser('organizationId') organizationId: string) {
+    return this.financialService.findAllInvoices(organizationId);
   }
 
   @Get('invoices/tenant/:tenantId')
@@ -70,7 +71,7 @@ export class FinancialController {
   }
 
   @Patch('invoices/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update an invoice' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -84,7 +85,7 @@ export class FinancialController {
   }
 
   @Delete('invoices/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete an invoice' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -96,7 +97,7 @@ export class FinancialController {
 
   // Payment endpoints
   @Post('payments')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create a payment' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -109,8 +110,8 @@ export class FinancialController {
   @Get('payments')
   @ApiOperation({ summary: 'Get all payments' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of all payments' })
-  findAllPayments() {
-    return this.financialService.findAllPayments();
+  findAllPayments(@CurrentUser('organizationId') organizationId: string) {
+    return this.financialService.findAllPayments(organizationId);
   }
 
   @Get('payments/tenant/:tenantId')
@@ -132,7 +133,7 @@ export class FinancialController {
   }
 
   @Patch('payments/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a payment' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -146,7 +147,7 @@ export class FinancialController {
   }
 
   @Delete('payments/:id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a payment' })
   @ApiResponse({
     status: HttpStatus.OK,

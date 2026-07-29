@@ -13,8 +13,9 @@ export class NotificationsRepository {
     });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.notification.findMany({
+      where: { user: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { user: true },
     });

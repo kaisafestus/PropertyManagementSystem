@@ -35,8 +35,8 @@ export class UnitsService {
     }
   }
 
-  findAll() {
-    return this.unitsRepository.findAll();
+  findAll(organizationId: string) {
+    return this.unitsRepository.findAll(organizationId);
   }
 
   findByProperty(propertyId: string) {

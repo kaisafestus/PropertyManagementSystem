@@ -19,6 +19,7 @@ import { UserRole } from '@prisma/client';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { NotificationsService } from '../services/notifications.service';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { UpdateNotificationDto } from '../dto/update-notification.dto';
@@ -31,7 +32,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Create a notification' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -47,8 +48,8 @@ export class NotificationsController {
     status: HttpStatus.OK,
     description: 'List of all notifications',
   })
-  findAll() {
-    return this.notificationsService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.notificationsService.findAll(organizationId);
   }
 
   @Get('user/:userId')
@@ -80,7 +81,7 @@ export class NotificationsController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Update a notification' })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -104,7 +105,7 @@ export class NotificationsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.LANDLORD)
   @ApiOperation({ summary: 'Delete a notification' })
   @ApiResponse({
     status: HttpStatus.OK,

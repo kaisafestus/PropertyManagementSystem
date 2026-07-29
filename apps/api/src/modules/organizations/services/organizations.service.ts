@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { OrganizationsRepository } from '../repositories/organizations.repository';
@@ -19,5 +19,17 @@ export class OrganizationsService {
 
   findAll() {
     return this.organizationsRepository.findAll();
+  }
+
+  async findById(id: string) {
+    const org = await this.organizationsRepository.findById(id);
+    if (!org)
+      throw new NotFoundException(`Organization with ID ${id} not found`);
+    return org;
+  }
+
+  async update(id: string, data: Prisma.OrganizationUpdateInput) {
+    await this.findById(id);
+    return this.organizationsRepository.update(id, data);
   }
 }

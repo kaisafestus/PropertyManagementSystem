@@ -10,8 +10,9 @@ export class DocumentsRepository {
     return this.prisma.document.create({ data });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.document.findMany({
+      where: { uploader: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { uploader: true },
     });

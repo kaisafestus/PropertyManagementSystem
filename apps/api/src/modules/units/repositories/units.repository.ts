@@ -10,8 +10,9 @@ export class UnitsRepository {
     return this.prisma.unit.create({ data });
   }
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.unit.findMany({
+      where: { property: { organizationId } },
       orderBy: { createdAt: 'desc' },
       include: { property: true },
     });

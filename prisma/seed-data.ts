@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -10,12 +10,51 @@ async function hash(pw: string) {
   return bcrypt.hash(pw, HASH_ROUNDS);
 }
 
+async function resetOrganizationData(organizationId: string) {
+  const userIds = (
+    await prisma.user.findMany({ where: { organizationId }, select: { id: true } })
+  ).map((user) => user.id);
+
+  if (userIds.length > 0) {
+    await prisma.notification.deleteMany({ where: { userId: { in: userIds } } });
+    await prisma.document.deleteMany({ where: { uploadedBy: { in: userIds } } });
+  }
+
+  await prisma.payment.deleteMany({ where: { property: { organizationId } } });
+  await prisma.invoice.deleteMany({ where: { property: { organizationId } } });
+  await prisma.maintenanceRequest.deleteMany({ where: { property: { organizationId } } });
+  await prisma.tenant.deleteMany({ where: { user: { organizationId } } });
+  await prisma.vendor.deleteMany({ where: { user: { organizationId } } });
+  await prisma.userSession.deleteMany({ where: { user: { organizationId } } });
+  await prisma.passwordResetToken.deleteMany({ where: { user: { organizationId } } });
+  await prisma.unit.deleteMany({ where: { property: { organizationId } } });
+  await prisma.property.deleteMany({ where: { organizationId } });
+  await prisma.user.deleteMany({ where: { organizationId } });
+  await prisma.organization.deleteMany({ where: { id: organizationId } });
+}
+
 async function main() {
   console.log('--- Property Management System Seed ---\n');
 
+  const existingOrg = await prisma.organization.findFirst({
+    where: { email: 'admin@cityview.com' },
+    select: { id: true },
+  });
+
+  if (existingOrg) {
+    await resetOrganizationData(existingOrg.id);
+    console.log('Reset existing demo organization data');
+  }
+
   // 1. Organization
-  const org = await prisma.organization.create({
-    data: {
+  const org = await prisma.organization.upsert({
+    where: { email: 'admin@cityview.com' },
+    update: {
+      name: 'CityView Properties',
+      phone: '+1-555-0100',
+      status: 'ACTIVE',
+    },
+    create: {
       name: 'CityView Properties',
       email: 'admin@cityview.com',
       phone: '+1-555-0100',
@@ -26,8 +65,19 @@ async function main() {
 
   // 2. Users
   const adminHash = await hash(PASSWORD);
-  const landlord = await prisma.user.create({
-    data: {
+  const landlord = await prisma.user.upsert({
+    where: { email: 'landlord@pms.com' },
+    update: {
+      organizationId: org.id,
+      firstName: 'James',
+      lastName: 'Mitchell',
+      phone: '+1-555-0101',
+      passwordHash: adminHash,
+      emailVerified: true,
+      status: 'ACTIVE',
+      role: 'LANDLORD',
+    },
+    create: {
       organizationId: org.id,
       firstName: 'James',
       lastName: 'Mitchell',
@@ -40,19 +90,45 @@ async function main() {
     },
   });
 
-  const tenantData = [
+  const tenantData: Array<{ firstName: string; lastName: string; email: string; phone: string }> = [
     { firstName: 'Sarah', lastName: 'Johnson', email: 'sarah@tenant.com', phone: '+1-555-0201' },
     { firstName: 'Michael', lastName: 'Chen', email: 'michael@tenant.com', phone: '+1-555-0202' },
     { firstName: 'Emily', lastName: 'Rodriguez', email: 'emily@tenant.com', phone: '+1-555-0203' },
     { firstName: 'David', lastName: 'Kim', email: 'david@tenant.com', phone: '+1-555-0204' },
     { firstName: 'Lisa', lastName: 'Patel', email: 'lisa@tenant.com', phone: '+1-555-0205' },
+    { firstName: 'Grace', lastName: 'Thompson', email: 'grace@tenant.com', phone: '+1-555-0206' },
+    { firstName: 'Daniel', lastName: 'Owens', email: 'daniel@tenant.com', phone: '+1-555-0207' },
+    { firstName: 'Noah', lastName: 'Martin', email: 'noah@tenant.com', phone: '+1-555-0208' },
+    { firstName: 'Ava', lastName: 'Lopez', email: 'ava@tenant.com', phone: '+1-555-0209' },
+    { firstName: 'Sofia', lastName: 'Ngugi', email: 'sofia@tenant.com', phone: '+1-555-0210' },
+    { firstName: 'Ethan', lastName: 'Wanjiku', email: 'ethan@tenant.com', phone: '+1-555-0211' },
+    { firstName: 'Maya', lastName: 'Kariuki', email: 'maya@tenant.com', phone: '+1-555-0212' },
+    { firstName: 'Liam', lastName: 'Njoroge', email: 'liam@tenant.com', phone: '+1-555-0213' },
+    { firstName: 'Chloe', lastName: 'Akinyi', email: 'chloe@tenant.com', phone: '+1-555-0214' },
+    { firstName: 'Owen', lastName: 'Mugo', email: 'owen@tenant.com', phone: '+1-555-0215' },
+    { firstName: 'Amelia', lastName: 'Muthoni', email: 'amelia@tenant.com', phone: '+1-555-0216' },
+    { firstName: 'Lucas', lastName: 'Ochieng', email: 'lucas@tenant.com', phone: '+1-555-0217' },
+    { firstName: 'Harper', lastName: 'Mutua', email: 'harper@tenant.com', phone: '+1-555-0218' },
+    { firstName: 'Henry', lastName: 'Wambua', email: 'henry@tenant.com', phone: '+1-555-0219' },
+    { firstName: 'Ella', lastName: 'Kiptoo', email: 'ella@tenant.com', phone: '+1-555-0220' },
   ];
 
   const tenantHash = await hash(PASSWORD);
-  const tenantUsers = [];
+  const tenantUsers: Array<{ id: string; firstName: string; lastName: string }> = [];
   for (const t of tenantData) {
-    const user = await prisma.user.create({
-      data: {
+    const user = await prisma.user.upsert({
+      where: { email: t.email },
+      update: {
+        organizationId: org.id,
+        firstName: t.firstName,
+        lastName: t.lastName,
+        phone: t.phone,
+        passwordHash: tenantHash,
+        emailVerified: true,
+        status: 'ACTIVE',
+        role: 'TENANT',
+      },
+      create: {
         organizationId: org.id,
         firstName: t.firstName,
         lastName: t.lastName,
@@ -85,10 +161,24 @@ async function main() {
   ];
 
   const vendorHash = await hash(PASSWORD);
-  const vendorUsers = [];
+  const vendorUsers: Array<{
+    user: { id: string; firstName: string; lastName: string };
+    company: string;
+  }> = [];
   for (const v of vendorData) {
-    const user = await prisma.user.create({
-      data: {
+    const user = await prisma.user.upsert({
+      where: { email: v.email },
+      update: {
+        organizationId: org.id,
+        firstName: v.firstName,
+        lastName: v.lastName,
+        phone: v.phone,
+        passwordHash: vendorHash,
+        emailVerified: true,
+        status: 'ACTIVE',
+        role: 'VENDOR',
+      },
+      create: {
         organizationId: org.id,
         firstName: v.firstName,
         lastName: v.lastName,
@@ -106,16 +196,22 @@ async function main() {
   console.log(`Users: 1 landlord, ${tenantUsers.length} tenants, ${vendorUsers.length} vendors`);
 
   // 3. Tenant & Vendor profiles
-  const tenants = [];
+  const tenants: Array<{ id: string; user: { id: string; firstName: string; lastName: string } }> =
+    [];
   for (const u of tenantUsers) {
-    const t = await prisma.tenant.create({ data: { userId: u.id } });
-    tenants.push({ ...t, user: u });
+    const existingTenant = await prisma.tenant.findFirst({ where: { userId: u.id } });
+    const t = existingTenant ?? (await prisma.tenant.create({ data: { userId: u.id } }));
+    tenants.push({ id: t.id, user: u });
   }
 
-  const vendors = [];
+  const vendors: Array<{ id: string; user: { id: string; firstName: string; lastName: string } }> =
+    [];
   for (const { user, company } of vendorUsers) {
-    const v = await prisma.vendor.create({ data: { userId: user.id, companyName: company } });
-    vendors.push({ ...v, user });
+    const existingVendor = await prisma.vendor.findFirst({ where: { userId: user.id } });
+    const v =
+      existingVendor ??
+      (await prisma.vendor.create({ data: { userId: user.id, companyName: company } }));
+    vendors.push({ id: v.id, user });
   }
 
   console.log(`Tenant profiles: ${tenants.length}, Vendor profiles: ${vendors.length}`);
@@ -151,7 +247,7 @@ async function main() {
     },
   ];
 
-  const properties = [];
+  const properties: Array<{ id: string }> = [];
   for (const p of propertyData) {
     const prop = await prisma.property.create({
       data: { ...p, organizationId: org.id },
@@ -267,7 +363,12 @@ async function main() {
     },
   ];
 
-  const units = [];
+  const units: Array<{
+    id: string;
+    propertyId: string;
+    monthlyRent: Prisma.Decimal;
+    unitNumber: string;
+  }> = [];
   for (const u of unitData) {
     const unit = await prisma.unit.create({ data: u });
     units.push(unit);
@@ -280,41 +381,105 @@ async function main() {
   }
   console.log(`Units: ${units.length} (across ${properties.length} properties)`);
 
-  // 6. Invoices (monthly rent for occupied units)
-  const occupiedUnits = units.filter((u) => !u.vacant);
-  const invoices = [];
+  // 6. Assign tenants to units for a fuller occupancy snapshot
+  const assignedTenants: Array<{
+    id: string;
+    user: { id: string; firstName: string; lastName: string };
+    propertyId: string;
+    unitId: string;
+  }> = [];
+  for (let index = 0; index < Math.min(tenants.length, units.length); index += 1) {
+    const tenant = tenants[index];
+    const unit = units[index];
+    const updatedTenant = await prisma.tenant.update({
+      where: { id: tenant.id },
+      data: {
+        propertyId: unit.propertyId,
+        unitId: unit.id,
+      },
+    });
+    await prisma.unit.update({
+      where: { id: unit.id },
+      data: { vacant: false },
+    });
+    assignedTenants.push({
+      id: updatedTenant.id,
+      user: tenant.user,
+      propertyId: unit.propertyId,
+      unitId: unit.id,
+    });
+    tenants[index] = { id: updatedTenant.id, user: tenant.user };
+  }
+
+  // 7. Invoices (monthly rent and recurring charges)
+  const invoices: Array<{
+    id: string;
+    tenant: { id: string; user?: { id: string } };
+    propertyId: string;
+    unitId: string;
+    totalAmount: Prisma.Decimal | number;
+    amount: Prisma.Decimal | number;
+    invoiceNumber: string;
+    unit: { id: string; propertyId: string; monthlyRent: Prisma.Decimal; unitNumber: string };
+  }> = [];
+  const invoiceStatuses = [
+    'PAID',
+    'PAID',
+    'PAID',
+    'SENT',
+    'SENT',
+    'OVERDUE',
+    'SENT',
+    'OVERDUE',
+    'PARTIAL',
+    'SENT',
+    'OVERDUE',
+    'SENT',
+  ] as const;
   let invCounter = 1;
-  for (let i = 0; i < occupiedUnits.length; i++) {
-    const unit = occupiedUnits[i];
-    const tenant = tenants[i % tenants.length];
+  for (let i = 0; i < Math.min(assignedTenants.length, 12); i += 1) {
+    const tenant = assignedTenants[i];
+    const unit = units[i];
+    const dueDate = new Date('2026-08-01');
+    dueDate.setDate(dueDate.getDate() + i * 7);
+    const amount = Number(unit.monthlyRent) + i * 1500;
+    const tax = Number(amount) * 0.16;
+    const totalAmount = Number(amount) + tax;
+    const status = invoiceStatuses[i % invoiceStatuses.length];
     const inv = await prisma.invoice.create({
       data: {
         tenantId: tenant.id,
         propertyId: unit.propertyId,
         unitId: unit.id,
         invoiceNumber: `INV-2026-${String(invCounter++).padStart(4, '0')}`,
-        dueDate: new Date('2026-08-01'),
-        amount: unit.monthlyRent,
-        tax: Number(unit.monthlyRent) * 0.16,
-        totalAmount: Number(unit.monthlyRent) * 1.16,
-        description: `Monthly rent for ${unit.unitNumber}`,
-        status: 'SENT',
+        dueDate,
+        amount,
+        tax,
+        totalAmount,
+        description:
+          i % 3 === 0
+            ? `Monthly rent for ${unit.unitNumber}`
+            : i % 3 === 1
+              ? `Service charge for ${unit.unitNumber}`
+              : `Recurring bill for ${unit.unitNumber}`,
+        status,
       },
     });
     invoices.push({ ...inv, tenant, unit });
   }
   console.log(`Invoices: ${invoices.length}`);
 
-  // 7. Payments (for first 5 invoices)
+  // 8. Payments (for first 6 invoices)
   const paymentMethods: Array<'BANK_TRANSFER' | 'M_PESA' | 'CASH' | 'CREDIT_CARD'> = [
     'M_PESA',
     'BANK_TRANSFER',
     'CASH',
     'M_PESA',
     'CREDIT_CARD',
+    'BANK_TRANSFER',
   ];
-  const payments = [];
-  for (let i = 0; i < Math.min(5, invoices.length); i++) {
+  const payments: Array<{ status: string }> = [];
+  for (let i = 0; i < Math.min(6, invoices.length); i += 1) {
     const inv = invoices[i];
     const pymt = await prisma.payment.create({
       data: {
@@ -343,7 +508,7 @@ async function main() {
     `Payments: ${payments.length} (${payments.filter((p) => p.status === 'PAID').length} paid)`,
   );
 
-  // 8. Maintenance requests
+  // 9. Maintenance requests
   const maintenanceData = [
     {
       propertyId: properties[0].id,
@@ -405,14 +570,14 @@ async function main() {
     },
   ];
 
-  const maintRequests = [];
+  const maintRequests: Array<{ id: string }> = [];
   for (const m of maintenanceData) {
     const req = await prisma.maintenanceRequest.create({ data: m });
     maintRequests.push(req);
   }
   console.log(`Maintenance requests: ${maintRequests.length}`);
 
-  // 9. Notifications
+  // 10. Notifications
   const notificationData = [
     {
       userId: landlord.id,
@@ -457,7 +622,7 @@ async function main() {
   }
   console.log(`Notifications: ${notificationData.length}`);
 
-  // 10. Documents
+  // 11. Documents
   const documentData = [
     {
       name: 'Lease Agreement - A101',

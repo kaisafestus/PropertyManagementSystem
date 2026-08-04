@@ -54,8 +54,8 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
         color: 'text.primary',
         borderBottom: '1px solid',
         borderColor: 'divider',
-        width: { md: `calc(100% - 260px)` },
-        ml: { md: '260px' },
+        width: { md: `calc(100% - 250px)` },
+        ml: { md: '250px' },
       }}
     >
       <Toolbar>

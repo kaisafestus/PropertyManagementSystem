@@ -10,16 +10,19 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+    // Only load user from API if not already authenticated
+    if (!isAuthenticated) {
+      loadUser();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.replace('/login');
     }
   }, [isLoading, isAuthenticated, router]);
 
-  if (isLoading) {
+  if (isLoading && !isAuthenticated) {
     return (
       <Box
         sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}

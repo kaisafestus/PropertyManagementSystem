@@ -5,6 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
 import { UsersModule } from '../users/users.module';
+import { OrganizationsModule } from '../organizations/organizations.module';
 
 import { AuthController } from './controllers/auth.controller';
 import { PermissionsGuard } from './guards/permissions.guard';
@@ -27,6 +28,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }),
     }),
     UsersModule,
+    OrganizationsModule,
   ],
   controllers: [AuthController],
   providers: [

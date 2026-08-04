@@ -107,7 +107,14 @@ export default function DocumentsPage() {
       setForm(emptyForm);
       load();
     } catch (err: any) {
-      setError(err.response?.data?.message?.message || 'Failed to upload document');
+      const msg = err.response?.data?.message;
+      if (Array.isArray(msg)) {
+        setError(msg[0]);
+      } else if (typeof msg === 'string') {
+        setError(msg);
+      } else {
+        setError('Failed to upload document');
+      }
     }
   };
 

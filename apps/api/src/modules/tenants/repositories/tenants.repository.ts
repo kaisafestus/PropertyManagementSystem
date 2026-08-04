@@ -14,21 +14,21 @@ export class TenantsRepository {
     return this.prisma.tenant.findMany({
       where: { user: { organizationId } },
       orderBy: { createdAt: 'desc' },
-      include: { user: true },
+      include: { user: true, property: true, unit: true },
     });
   }
 
   findById(id: string) {
     return this.prisma.tenant.findUnique({
       where: { id },
-      include: { user: true },
+      include: { user: true, property: true, unit: true },
     });
   }
 
   findByUserId(userId: string) {
     return this.prisma.tenant.findUnique({
       where: { userId },
-      include: { user: true },
+      include: { user: true, property: true, unit: true },
     });
   }
 

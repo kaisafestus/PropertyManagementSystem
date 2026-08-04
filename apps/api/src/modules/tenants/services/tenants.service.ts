@@ -3,38 +3,59 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { TenantsRepository } from '../repositories/tenants.repository';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
+import { UsersService } from '../../users/services/users.service';
+import { PasswordService } from '../../../common/services/password.service';
 
 @Injectable()
 export class TenantsService {
-  constructor(private readonly tenantsRepository: TenantsRepository) {}
+  constructor(
+    private readonly tenantsRepository: TenantsRepository,
+    private readonly usersService: UsersService,
+    private readonly passwordService: PasswordService,
+  ) {}
 
   async create(createTenantDto: CreateTenantDto) {
-    try {
-      // Check if user already has a tenant record
-      const existingTenant = await this.tenantsRepository.findByUserId(
-        createTenantDto.userId,
-      );
-      if (existingTenant) {
-        throw new BadRequestException('User already has a tenant profile');
-      }
+    const {
+      email,
+      firstName,
+      lastName,
+      phone,
+      organizationId,
+      propertyId,
+      unitId,
+    } = createTenantDto;
 
-      const data: Prisma.TenantCreateInput = {
-        user: { connect: { id: createTenantDto.userId } },
-      };
-
-      return await this.tenantsRepository.create(data);
-    } catch (error: unknown) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2003') {
-          throw new BadRequestException('User not found');
-        }
-      }
-      throw error;
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('Email already exists');
     }
+
+    const defaultPassword = 'Password123!';
+    const passwordHash = await this.passwordService.hash(defaultPassword);
+
+    const user = await this.usersService.create({
+      email,
+      passwordHash,
+      firstName,
+      lastName,
+      phone,
+      organization: { connect: { id: organizationId } },
+      role: UserRole.TENANT,
+      emailVerified: true,
+      status: 'ACTIVE',
+    });
+
+    const tenant = await this.tenantsRepository.create({
+      user: { connect: { id: user.id } },
+      property: propertyId ? { connect: { id: propertyId } } : undefined,
+      unit: unitId ? { connect: { id: unitId } } : undefined,
+    });
+
+    return this.tenantsRepository.findById(tenant.id);
   }
 
   findAll(organizationId: string) {
@@ -55,21 +76,23 @@ export class TenantsService {
   }
 
   async update(id: string, updateTenantDto: UpdateTenantDto) {
-    await this.findById(id);
-    try {
-      const data: Prisma.TenantUpdateInput = {
-        user: updateTenantDto.userId
-          ? { connect: { id: updateTenantDto.userId } }
-          : undefined,
-      };
-      return await this.tenantsRepository.update(id, data);
-    } catch (error: unknown) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2003')
-          throw new BadRequestException('User not found');
-      }
-      throw error;
+    const tenant = await this.findById(id);
+
+    const userData: Prisma.UserUpdateInput = {};
+    if (updateTenantDto.firstName !== undefined)
+      userData.firstName = updateTenantDto.firstName;
+    if (updateTenantDto.lastName !== undefined)
+      userData.lastName = updateTenantDto.lastName;
+    if (updateTenantDto.email !== undefined)
+      userData.email = updateTenantDto.email;
+    if (updateTenantDto.phone !== undefined)
+      userData.phone = updateTenantDto.phone;
+
+    if (Object.keys(userData).length > 0) {
+      await this.usersService.update(tenant.userId, userData);
     }
+
+    return this.tenantsRepository.findById(id);
   }
 
   async remove(id: string) {

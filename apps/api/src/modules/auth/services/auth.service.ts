@@ -4,11 +4,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 import { randomBytes } from 'crypto';
 
 import { UsersService } from '../../users/services/users.service';
 import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
 import { PasswordService } from '../../../common/services/password.service';
 import { PrismaService } from '../../../database/prisma/prisma.service';
 
@@ -20,6 +21,48 @@ export class AuthService {
     private readonly passwordService: PasswordService,
     private readonly prisma: PrismaService,
   ) {}
+
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ user: User; accessToken: string; refreshToken: string }> {
+    const { email, password, firstName, lastName, organizationName, phone } =
+      registerDto;
+
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('Email already exists');
+    }
+
+    const passwordHash = await this.passwordService.hash(password);
+
+    const organization = await this.prisma.organization.create({
+      data: {
+        name: organizationName,
+        email,
+        phone,
+        status: 'ACTIVE',
+      },
+    });
+
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        firstName,
+        lastName,
+        phone,
+        organizationId: organization.id,
+        role: UserRole.LANDLORD,
+        emailVerified: true,
+        status: 'ACTIVE',
+      },
+    });
+
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = await this.generateRefreshToken(user.id);
+
+    return { user, accessToken, refreshToken };
+  }
 
   async login(
     loginDto: LoginDto,

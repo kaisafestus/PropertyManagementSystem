@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Box,
   Card,
@@ -39,7 +40,14 @@ export default function LoginPage() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message?.message || 'Invalid credentials');
+      const msg = err.response?.data?.message;
+      if (Array.isArray(msg)) {
+        setError(msg[0]);
+      } else if (typeof msg === 'string') {
+        setError(msg);
+      } else {
+        setError('Invalid credentials');
+      }
     } finally {
       setLoading(false);
     }
@@ -107,6 +115,17 @@ export default function LoginPage() {
           <Button fullWidth variant="contained" type="submit" size="large" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </Button>
+          <Box sx={{ mt: 2, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Don't have an account?{' '}
+              <Link
+                href="/signup"
+                style={{ color: 'inherit', fontWeight: 600, textDecoration: 'none' }}
+              >
+                Sign up
+              </Link>
+            </Typography>
+          </Box>
         </Box>
       </CardContent>
     </Card>

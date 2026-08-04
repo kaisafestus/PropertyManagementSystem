@@ -9,6 +9,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { LoginDto } from '../dto/login.dto';
+import { RegisterDto } from '../dto/register.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { AuthResponseDto } from '../dto/auth-response.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
@@ -21,6 +22,18 @@ import { AuthService } from '../services/auth.service';
 })
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('register')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Register a new landlord account',
+  })
+  @ApiOkResponse({
+    type: AuthResponseDto,
+  })
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
 
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } })

@@ -22,12 +22,14 @@ import {
   Chip,
   Alert,
 } from '@mui/material';
-import { Add, Edit, Visibility } from '@mui/icons-material';
+import { Add, Edit } from '@mui/icons-material';
 import api from '@/lib/api';
 
 interface Tenant {
   id: string;
   user?: { firstName: string; lastName: string };
+  property?: { id: string; name: string };
+  unit?: { id: string; unitNumber: string };
 }
 interface Property {
   id: string;
@@ -45,7 +47,6 @@ interface Invoice {
   propertyId: string;
   unitId: string;
   amount: number;
-  tax?: number;
   totalAmount: number;
   description: string;
   status: string;
@@ -75,7 +76,6 @@ const emptyForm = {
   invoiceNumber: '',
   dueDate: '',
   amount: '',
-  tax: '',
   description: '',
 };
 
@@ -108,17 +108,45 @@ export default function InvoicesPage() {
     }
   }, [form.propertyId]);
 
+  const handleTenantChange = (tenantId: string) => {
+    const tenant = tenants.find((t) => t.id === tenantId);
+    if (tenant) {
+      setForm({
+        ...form,
+        tenantId,
+        propertyId: tenant.property?.id || '',
+        unitId: tenant.unit?.id || '',
+      });
+      if (tenant.property?.id) {
+        api.get(`/units/property/${tenant.property.id}`).then(({ data }) => setUnits(data));
+      }
+    } else {
+      setForm({ ...form, tenantId, propertyId: '', unitId: '' });
+    }
+  };
+
   const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [field]: e.target.value });
   };
 
   const handleSubmit = async () => {
     setError('');
+    if (
+      !form.tenantId ||
+      !form.propertyId ||
+      !form.unitId ||
+      !form.invoiceNumber.trim() ||
+      !form.dueDate ||
+      !form.amount
+    ) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
     try {
       const body = {
         ...form,
         amount: parseFloat(form.amount),
-        tax: form.tax ? parseFloat(form.tax) : undefined,
       };
       if (editing) {
         await api.patch(`/financial/invoices/${editing.id}`, body);
@@ -130,7 +158,14 @@ export default function InvoicesPage() {
       setForm(emptyForm);
       load();
     } catch (err: any) {
-      setError(err.response?.data?.message?.message || 'Failed to save invoice');
+      const msg = err.response?.data?.message;
+      if (Array.isArray(msg)) {
+        setError(msg[0]);
+      } else if (typeof msg === 'string') {
+        setError(msg);
+      } else {
+        setError('Failed to save invoice');
+      }
     }
   };
 
@@ -143,7 +178,6 @@ export default function InvoicesPage() {
       invoiceNumber: inv.invoiceNumber,
       dueDate: inv.dueDate?.split('T')[0] || '',
       amount: String(inv.amount),
-      tax: inv.tax ? String(inv.tax) : '',
       description: inv.description,
     });
     setOpen(true);
@@ -231,7 +265,7 @@ export default function InvoicesPage() {
             fullWidth
             label="Tenant"
             value={form.tenantId}
-            onChange={handleChange('tenantId')}
+            onChange={(e) => handleTenantChange(e.target.value)}
             required
             sx={{ mt: 1, mb: 2 }}
           >
@@ -249,6 +283,7 @@ export default function InvoicesPage() {
             onChange={handleChange('propertyId')}
             required
             sx={{ mb: 2 }}
+            disabled={!!form.tenantId}
           >
             {properties.map((p) => (
               <MenuItem key={p.id} value={p.id}>
@@ -264,6 +299,7 @@ export default function InvoicesPage() {
             onChange={handleChange('unitId')}
             required
             sx={{ mb: 2 }}
+            disabled={!!form.tenantId}
           >
             {units.map((u) => (
               <MenuItem key={u.id} value={u.id}>
@@ -296,14 +332,6 @@ export default function InvoicesPage() {
             value={form.amount}
             onChange={handleChange('amount')}
             required
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            fullWidth
-            label="Tax"
-            type="number"
-            value={form.tax}
-            onChange={handleChange('tax')}
             sx={{ mb: 2 }}
           />
           <TextField

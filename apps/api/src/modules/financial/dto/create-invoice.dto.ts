@@ -34,12 +34,6 @@ export class CreateInvoiceDto {
   @Min(0)
   amount: number;
 
-  @ApiPropertyOptional({ description: 'Tax amount' })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  tax?: number;
-
   @ApiProperty({ description: 'Description' })
   @IsString()
   description: string;

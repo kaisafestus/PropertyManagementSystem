@@ -17,14 +17,12 @@ export class FinancialService {
   // Invoice methods
   async createInvoice(createInvoiceDto: CreateInvoiceDto) {
     try {
-      const totalAmount = createInvoiceDto.amount + (createInvoiceDto.tax || 0);
       const data: Prisma.InvoiceCreateInput = {
         invoiceNumber: createInvoiceDto.invoiceNumber,
         issueDate: new Date(),
         dueDate: new Date(createInvoiceDto.dueDate),
         amount: createInvoiceDto.amount,
-        tax: createInvoiceDto.tax,
-        totalAmount: totalAmount,
+        totalAmount: createInvoiceDto.amount,
         description: createInvoiceDto.description,
         status: createInvoiceDto.status || InvoiceStatus.DRAFT,
         tenant: { connect: { id: createInvoiceDto.tenantId } },
@@ -67,11 +65,7 @@ export class FinancialService {
           ? new Date(updateInvoiceDto.dueDate)
           : undefined,
         amount: updateInvoiceDto.amount,
-        tax: updateInvoiceDto.tax,
-        totalAmount:
-          updateInvoiceDto.amount && updateInvoiceDto.tax !== undefined
-            ? updateInvoiceDto.amount + updateInvoiceDto.tax
-            : undefined,
+        totalAmount: updateInvoiceDto.amount,
         description: updateInvoiceDto.description,
         status: updateInvoiceDto.status,
         tenant: updateInvoiceDto.tenantId

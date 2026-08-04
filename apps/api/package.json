@@ -21,10 +21,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
-    "@nestjs/mapped-types": "^2.1.1",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/throttler": "^6.5.0",
@@ -38,7 +36,9 @@
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
+    "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",
+    "@nestjs/mapped-types": "2.1.1",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/swagger": "^11.4.6",
     "@nestjs/testing": "^11.0.1",
